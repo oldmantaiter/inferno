@@ -104,6 +104,10 @@ class Archiver(object):
     def _normalized_blobs(self, tag):
         rval = set()
         for blob in self.ddfs.blobs(tag):
+            if len(blob) == 0:
+                # TODO: Figure out why disco did this, or if we did it ourselves
+                log.error("Disco returned an empty list for a blob in tag %s" % tag)
+                continue
             rval.add(self.get_blob_name(blob[0]))
         return rval
 
