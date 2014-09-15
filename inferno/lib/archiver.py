@@ -73,7 +73,12 @@ class Archiver(object):
         for tag in source_tags:
             for blob in self.ddfs.blobs(tag):
                 #normalized_blob = tuple(sorted(blob))
+                if len(blob) == 0:
+                    # This is a pretty nasty error as well...
+                    log.error("Disco returned an empty list for a blob in tag %s" % tag)
+                    continue
                 blob_name = self.get_blob_name(blob[0])
+
                 if blob_name not in archived_blobs:
                     incoming_blobs = tag_map.setdefault(tag, [])
                     if blob_count == self.max_blobs:
@@ -99,16 +104,21 @@ class Archiver(object):
         return source_tags, archived_blobs
 
     def get_blob_name(self, blob):
-        return blob.rsplit('/', 1)[1]
+        try:
+            return blob.rsplit('/', 1)[1]
+        except:
+            return []
 
     def _normalized_blobs(self, tag):
         rval = set()
         for blob in self.ddfs.blobs(tag):
             if len(blob) == 0:
-                # TODO: Figure out why disco did this, or if we did it ourselves
                 log.error("Disco returned an empty list for a blob in tag %s" % tag)
                 continue
-            rval.add(self.get_blob_name(blob[0]))
+            try:
+                rval.add(self.get_blob_name(blob[0]))
+            except:
+                log.error("Error getting blob name: %s" % blob)
         return rval
 
     def _get_archive_name(self, tag):
